@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="icon" href="icon_diet.png">
+		<title>Summary</title>
+		<!-- jquery min 3.3.1 -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		
+		<!-- angularjs min 1.5.11 & animate -->
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.11/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.11/angular-animate.js"></script>
+
+		<!-- datatables -->
+
+		<script src="angular-datatables.min.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.16/af-2.2.2/datatables.min.css"/>
+ 
+		<script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.16/af-2.2.2/datatables.min.js"></script>
+		
+		<!-- Latest bootstap.min CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+		<!-- Latest bootstap.min JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+		<!-- Angular UI-->
+    
+		<script src= "ui-bootstrap-tpls-0.14.3.min.js" ></script>
+
+		<!-- Angular Charts-->
+		<!-- npm with cmd into page directory helps alot rather than using links -->
+		<script src="node_modules/chart.js/dist/Chart.min.js"></script>
+		<script src="node_modules/angular-chart.js/dist/angular-chart.min.js"></script>
+		<script src="https://rawgit.com/beaver71/Chart.PieceLabel.js/master/build/Chart.PieceLabel.min.js"></script>
+				
+	</head>
+
+
+	<body ng-app="crudApp" ng-controller="crudController">
+		
+		<div align ="center" class="container" ng-init="fetchData()">
+			
+			<br />
+			
+			<h3 align="center">Summary</h3>
+			<br />
+
+			<br />
+			
+			<div align="left">	<button ng-click="clickedtoDaily()" class="btn btn-primary">Back to Daily Entry </button>
+			</div>
+
+			<h5 align="center">Average Calories: {{summaryCalories}}</h5>
+			<br />
+
+			<br />
+			
+			<div style="height:200px;width:430px;">	
+				<canvas id="pie" ng-init=fetchStats() class="chart chart-pie" chart-data="dataPie" chart-labels="labels" chart-options="pieChartDefaulOptions">
+				</canvas> 
+			</div>
+			<br />
+			<br />
+			<br />
+
+			<div style="height:200px;width:630px;">
+				<canvas id="line"  ng-init=fetchCals() class="chart chart-line" chart-data="dataLine" chart-labels="labelsLine"  chart-click="onClick">
+				</canvas>
+			</div>
+
+			
+		</div>
+	</body>
+</html>
+
+
+
+<script>
+
+var app = angular.module('crudApp', ['datatables','ui.bootstrap','chart.js']);
+
+
+app.controller('crudController', function($scope, DTOptionsBuilder,$http){
+
+		 $scope.clickedtoDaily = function(){
+       window.location = "../index.html";
+ }
+	
+	
+
+/*************************** Pie Chart and Total Calories ************************/
+
+	// Fetching Stats for pie chart
+	$scope.fetchStats = function(){
+		console.log("Fetched Stats!!!");
+
+		$http({
+			method:"POST",
+			url:"get_grams.php",
+			data:{'action':'fetch_overall_stats'}
+		}).success(function(data){
+			$scope.dataPie = [data.tprotein/data.tcalories,data.tunsaturated/data.tcalories,data.tsaturated/data.tcalories,data.tcarbohydrates/data.tcalories];
+		//	$scope.summaryCalories = data.tcalories;
+			console.log(data);
+				});
+				}
+
+
+$scope.labels = ["Protein", "Unsaturated Fats","Saturated Fats", "Carbohydrates"];
+$scope.pieChartDefaulOptions = {       pieceLabel: {
+        render: 'value'+'%',
+        fontColor: '#000',
+        position: 'inside',
+        segment: true
+      }, legend: { display: true, position:'right' }};
+
+
+	// Fetching Stats for line chart and total calories
+	$scope.fetchCals = function(){
+		console.log("Fetched Stats Calories!!!");
+
+		$http({
+			method:"POST",
+			url:"get_summary_calories.php",
+			data:{'action':'fetch_summary_calories'}
+		}).success(function(data){
+			$scope.labelsLine = data.datetime;
+			$scope.dataLine = data.stcalories;
+			//$scope.summaryCalories = data.stcalories/;
+			console.log(data);
+
+			$http({
+				method:"POST",
+				url:"get_summary_calories.php",
+				data:{'action':'fetch_average_calories'}
+		}).success(function(data){
+			$scope.summaryCalories =  Math.round(data.avgcal * 100) / 100;
+			console.log(data);
+	});
+				});
+				}
+
+  $scope.onClick = function (points, evt) {
+    console.log(points, evt);
+  };
+});
+
+</script>
